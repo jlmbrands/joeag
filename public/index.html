@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>joe.ag</title>
+  <meta name="description" content="Walk around Joseph Morgan's town. Every building is something he built. Dallas / Fort Worth, Texas.">
+  <meta name="theme-color" content="#7fb2e5">
+  <meta property="og:title" content="joe.ag">
+  <meta property="og:description" content="Walk around Joseph Morgan's town. Every building is something he built.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://joe.ag/">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <canvas id="view" aria-label="A first-person blocky world. Walk up to a building to visit the site it stands for."></canvas>
+
+  <div class="hud top">
+    <div class="col">
+      <span class="who">Joseph Morgan · DFW, Texas</span>
+      <span class="sub" id="people">Just you here</span>
+    </div>
+    <div class="col right">
+      <span class="where" id="where">The Prairie</span>
+      <span class="sub" id="clock"></span>
+    </div>
+  </div>
+
+  <div class="crosshair" id="crosshair" aria-hidden="true"></div>
+
+  <div class="prompt" id="prompt" hidden>
+    <b id="prompt-title"></b>
+    <i id="prompt-sub"></i>
+    <span class="key" id="prompt-key">E</span>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+  <button type="button" class="released" id="released" hidden>Mouse released. Click here or on the world to grab it again. The buttons work while it is released.</button>
+  <div class="tollbox" id="toll" hidden></div>
+
+  <div class="hotbar" id="hotbar" hidden></div>
+  <canvas class="minimap" id="minimap" width="192" height="192" hidden></canvas>
+
+  <div class="hud bottom">
+    <nav class="links">
+      <a href="https://jmorg.org" target="_blank" rel="noopener">JLM Brands</a>
+      <a href="https://themorganbrief.com" target="_blank" rel="noopener">The Morgan Brief</a>
+      <a href="mailto:mail@jmorg.org">Contact</a>
+    </nav>
+    <div class="ctls">
+      <button type="button" class="ctl" id="sound" aria-pressed="false">Sound off</button>
+      <button type="button" class="ctl" id="mapbtn">Map</button>
+      <button type="button" class="ctl" id="build" aria-pressed="false">Build</button>
+      <button type="button" class="ctl" id="photo">Photo</button>
+    </div>
+  </div>
+
+  <div class="book" id="book" hidden>
+    <form id="bookform">
+      <h2>Guestbook</h2>
+      <p>One line. It goes on the Diner wall for everyone who comes after you.</p>
+      <input type="text" id="booktext" maxlength="90" autocomplete="off" placeholder="say something">
+      <div class="row">
+        <button type="submit" class="start small">Leave it</button>
+        <button type="button" class="ctl" id="bookclose">Never mind</button>
+      </div>
+      <p class="fine" id="bookstatus"></p>
+    </form>
+  </div>
+
+  <div class="touch" id="touch" hidden>
+    <div class="stick" id="stick"><div class="knob" id="knob"></div></div>
+    <button type="button" class="jump" id="jump" aria-label="Jump">▲</button>
+    <button type="button" class="fire" id="fire" aria-label="Fireworks">Fire</button>
+    <button type="button" class="visit" id="visit" hidden>Visit</button>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="card">
+      <h1>joe.ag</h1>
+      <p>A small town in Texas. Every building is something I built. Walk up to a door to go in. Other people here are real.</p>
+      <dl class="keys">
+        <dt>W A S D</dt><dd>walk</dd>
+        <dt>Mouse</dt><dd>look</dd>
+        <dt>Space</dt><dd>jump, swim up</dd>
+        <dt>E</dt><dd>visit, ride, pet</dd>
+        <dt>F</dt><dd>fireworks</dd>
+        <dt>B</dt><dd>build, then click to place and right-click to break</dd>
+        <dt>M · P</dt><dd>map · photo</dd>
+        <dt>T · R</dt><dd>skip an hour · change the weather</dd>
+        <dt>N</dt><dd>sound</dd>
+        <dt>Esc</dt><dd>let go of the mouse (buttons and links work while it is released)</dd>
+      </dl>
+      <label class="namefield">Your name, if you want one on your head
+        <input type="text" id="name" maxlength="24" autocomplete="off" placeholder="a visitor from Roanoke">
+      </label>
+      <button type="button" class="start" id="start" disabled>Building the town</button>
+      <div class="bar" aria-hidden="true"><i id="bar"></i></div>
+      <p class="fine" id="fine">Loading the world.</p>
+    </div>
+  </div>
+
+  <script src="vendor/three.min.js"></script>
+  <script src="blocks.js"></script>
+  <script src="world.js"></script>
+  <script src="sky.js"></script>
+  <script src="audio.js"></script>
+  <script src="net.js"></script>
+  <script src="players.js"></script>
+  <script src="vehicles.js"></script>
+  <script src="fireworks.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
