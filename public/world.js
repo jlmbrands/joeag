@@ -472,30 +472,31 @@
 
     var r;
     /* Downtown, north of 287 */
-    flatBuilding(C - 22, C - 6, 9, 7, 5, ID.brick, { title: 'Savings & Loan', sub: 'earnedtogether.com', href: 'https://earnedtogether.com', kind: 'site' });
-    r = flatBuilding(C - 8, C - 6, 11, 7, 6, ID.white, { title: 'The Brief', sub: 'themorganbrief.com', href: 'https://themorganbrief.com', kind: 'site' }, { awning: ID.black });
+    flatBuilding(C - 22, C - 6, 9, 7, 5, ID.brick, { title: 'Savings & Loan', sub: 'money, made together', href: 'https://earnedtogether.com', kind: 'site' });
+    r = flatBuilding(C - 8, C - 6, 11, 7, 6, ID.white, { title: 'The Brief', sub: 'every morning', href: 'https://themorganbrief.com', kind: 'site' }, { awning: ID.black });
     briefInside(C - 8, C - 6, r.x0, r.z0, r.x1, r.z1);
     /* the front of The Brief is a newspaper page: no windows up there */
     fill(r.x0 + 1, GROUND + 4, r.z1, r.x1 - 1, GROUND + 6, r.z1, ID.white);
-    briefFront = { x: C - 8 + 0.5, y: GROUND + 5.5, z: r.z1 + 1.03, w: 9, h: 3 };
-    r = flatBuilding(C + 7, C - 6, 11, 7, 5, ID.white, { title: 'Diner', sub: 'pleasetaste.com', href: 'https://pleasetaste.com', kind: 'site' }, { awning: ID.red_awning });
+    /* inset from the white panels so a long headline stays on the wall */
+    briefFront = { x: C - 8 + 0.5, y: GROUND + 5.5, z: r.z1 + 1.08, w: 8.2, h: 2.6 };
+    r = flatBuilding(C + 7, C - 6, 11, 7, 5, ID.white, { title: 'Diner', sub: 'the dishes worth going back for', href: 'https://pleasetaste.com', kind: 'site' }, { awning: ID.red_awning });
     dinerInside(C + 7, C - 6, r.x0, r.z0, r.x1, r.z1);
-    r = flatBuilding(C + 21, C - 6, 9, 7, 5, ID.blue, { title: 'Arcade', sub: 'buddyaudit.com', href: 'https://buddyaudit.com', kind: 'site' }, { windows: false, awning: ID.yellow });
+    r = flatBuilding(C + 21, C - 6, 9, 7, 5, ID.blue, { title: 'Arcade', sub: 'a quiz about your friends', href: 'https://buddyaudit.com', kind: 'site' }, { windows: false, awning: ID.yellow });
     arcadeInside(C + 21, C - 6, r.x0, r.z0, r.x1, r.z1);
 
     /* south of 287 */
-    r = flatBuilding(C - 10, C + 20, 11, 9, 12, ID.concrete, { title: 'JLM Brands HQ', sub: 'jmorg.org', href: 'https://jmorg.org', kind: 'site' });
+    r = flatBuilding(C - 10, C + 20, 11, 9, 12, ID.concrete, { title: 'JLM Brands HQ', sub: 'five brands, one door', href: 'https://jmorg.org', kind: 'site' });
     hqInside(C - 10, C + 20, r.x0, r.z0, r.x1, r.z1);
-    house(C + 12, C + 20, 9, 7, 4, ID.planks, ID.red_roof, { title: 'Depot, 1883', sub: 'haslet.net', href: 'https://haslet.net', kind: 'site' });
+    house(C + 12, C + 20, 9, 7, 4, ID.planks, ID.red_roof, { title: 'Depot, 1883', sub: 'the town since 1883', href: 'https://haslet.net', kind: 'site' });
 
     /* the prairie, north */
-    waterTower(C - 8, C - 34, { title: 'Water tower', sub: 'haslet.net', href: 'https://haslet.net', kind: 'site' });
-    billboard(C + 14, C - 30, { title: 'Vacant lot', sub: 'd-a-l-l-a-s.com', href: 'https://d-a-l-l-a-s.com', kind: 'soon', text: 'FOR LEASE' });
+    waterTower(C - 8, C - 34, { title: 'Water tower', sub: 'Haslet', href: 'https://haslet.net', kind: 'site' });
+    billboard(C + 14, C - 30, { title: 'Vacant lot', sub: 'a lot on the prairie', href: 'https://d-a-l-l-a-s.com', kind: 'soon', text: 'FOR LEASE' });
 
     /* Alliance, east */
-    radioTower(TOWER.x, TOWER.z, { title: 'Radio tower', sub: 'orbn.co', href: 'https://orbn.co', kind: 'site' });
-    gantry(LANE_X, GANTRY_Z, 2, { title: 'Express lane', sub: 'whoownsyourroad.com', href: 'https://whoownsyourroad.com', kind: 'site', text: '$24.00' });
-    crane(LANE_X + 22, C + 24, { title: 'Construction', sub: 'chromaconsult.com', href: 'https://chromaconsult.com', kind: 'soon' });
+    radioTower(TOWER.x, TOWER.z, { title: 'Radio tower', sub: 'your page, your way', href: 'https://orbn.co', kind: 'site' });
+    gantry(LANE_X, GANTRY_Z, 2, { title: 'Express lane', sub: 'six miles', href: 'https://whoownsyourroad.com', kind: 'site', text: '$24.00' });
+    crane(LANE_X + 22, C + 24, { title: 'Construction', sub: 'coming soon', href: 'https://chromaconsult.com', kind: 'soon' });
 
     /* the ranch, southwest */
     fence(C - 70, C + 30, C - 44, C + 60);
@@ -503,7 +504,7 @@
     basement(C - 58, C + 40);
     [[-66, 52], [-64, 54], [-52, 56], [-50, 56]].forEach(function (o) { var y = surface(C + o[0], C + o[1]) + 1; set(C + o[0], y, C + o[1], ID.hay); });
     set(C - 66, surface(C - 66, C + 52) + 2, C + 52, ID.hay);
-    shed(C + 60, C + 52, { title: 'Shed', sub: "23 x's dot com", href: 'https://xxxxxxxxxxxxxxxxxxxxxxx.com', kind: 'lore' });
+    shed(C + 60, C + 52, { title: 'Shed', sub: "count the x's", href: 'https://xxxxxxxxxxxxxxxxxxxxxxx.com', kind: 'lore' });
 
     /* secrets */
     var ry = GROUND - 2, i, j;
@@ -613,7 +614,7 @@
     opaque: new THREE.MeshLambertMaterial({ map: texture, vertexColors: true }),
     cutout: new THREE.MeshLambertMaterial({ map: texture, vertexColors: true, transparent: true, alphaTest: 0.4, side: THREE.DoubleSide }),
     water: new THREE.MeshLambertMaterial({ map: texture, vertexColors: true, transparent: true, opacity: 0.8 }),
-    cloud: new THREE.MeshBasicMaterial({ map: texture, fog: true }),
+    cloud: new THREE.MeshBasicMaterial({ map: texture, fog: true, color: 0xb7c0cc }),
     lamp: new THREE.MeshBasicMaterial({ map: texture, fog: true }),
     window: new THREE.MeshBasicMaterial({ map: texture, fog: true, transparent: true, opacity: 0 })
   };

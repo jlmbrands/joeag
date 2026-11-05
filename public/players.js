@@ -25,8 +25,8 @@
     function makeLabel(text) {
       var c = document.createElement('canvas'); c.width = 256; c.height = 48;
       var x = c.getContext('2d');
-      x.fillStyle = 'rgba(20,20,20,0.6)'; x.fillRect(0, 0, 256, 48);
-      x.fillStyle = '#f3f0e6'; x.font = '26px "Courier New", monospace'; x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.fillStyle = 'rgba(16,18,22,0.55)'; x.fillRect(0, 0, 256, 48);
+      x.fillStyle = '#F6F3EC'; x.font = '500 24px Inter, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
       x.fillText(text, 128, 25);
       var t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.minFilter = THREE.LinearFilter;
       var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, transparent: true, depthTest: false }));

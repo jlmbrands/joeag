@@ -62,12 +62,12 @@
     function spark(s) { if (sparks.length < MAX) sparks.push(s); }
 
     /* ---------- the word, sampled once into unit coordinates ---------- */
-    var letterPoints = (function () {
+    function sampleWord() {
       var c = document.createElement('canvas');
       c.width = 320; c.height = 120;
       var x = c.getContext('2d');
       x.fillStyle = '#fff';
-      x.font = 'bold 104px "Courier New", Courier, monospace';
+      x.font = '500 104px "Playfair Display", Georgia, serif';
       x.textAlign = 'center'; x.textBaseline = 'middle';
       x.fillText(WORD, c.width / 2, c.height / 2 + 4);
       var img = x.getImageData(0, 0, c.width, c.height).data;
@@ -76,7 +76,14 @@
         if (img[(j * c.width + i) * 4 + 3] > 128) out.push([(i / c.width) - 0.5, 0.5 - (j / c.height)]);
       }
       return out;
-    })();
+    }
+    var letterPoints = sampleWord();
+    if (document.fonts && document.fonts.load) {
+      document.fonts.load('500 104px "Playfair Display"').then(function () {
+        var next = sampleWord();
+        if (next.length) letterPoints = next;
+      }).catch(function () {});
+    }
 
     var palettes = [
       [[1, 0.55, 0.2], [1, 0.85, 0.3]],     /* orange and gold */
