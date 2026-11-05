@@ -2,23 +2,51 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-  <title>joe.ag</title>
-  <meta name="description" content="Walk around Joseph Morgan's town. Every building is something he built. Dallas / Fort Worth, Texas.">
-  <meta name="theme-color" content="#7fb2e5">
-  <meta property="og:title" content="joe.ag">
-  <meta property="og:description" content="Walk around Joseph Morgan's town. Every building is something he built.">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>joe.ag — Joseph Morgan's town in Haslet</title>
+  <meta name="description" content="A small town in Texas. Every building is something Joseph Morgan built. Walk up to a door and go in.">
+  <meta name="theme-color" content="#F6F3EC">
+  <meta name="author" content="Joseph Morgan">
+  <link rel="canonical" href="https://joe.ag/">
+  <meta property="og:site_name" content="joe.ag">
+  <meta property="og:title" content="joe.ag — Joseph Morgan's town in Haslet">
+  <meta property="og:description" content="A small town in Texas. Every building is something he built. Walk up to a door and go in.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://joe.ag/">
+  <meta property="og:image" content="https://joe.ag/og.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="joe.ag. A small town in Texas. Every building is something Joseph Morgan built.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="joe.ag — Joseph Morgan's town in Haslet">
+  <meta name="twitter:description" content="A small town in Texas. Every building is something he built. Walk up to a door and go in.">
+  <meta name="twitter:image" content="https://joe.ag/og.png">
+  <meta name="twitter:image:alt" content="joe.ag. A small town in Texas. Every building is something Joseph Morgan built.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Joseph Morgan",
+    "url": "https://joe.ag/",
+    "homeLocation": { "@type": "Place", "name": "Haslet, Texas" },
+    "affiliation": { "@type": "Organization", "name": "JLM Brands", "url": "https://jmorg.org" },
+    "sameAs": ["https://jmorg.org", "https://themorganbrief.com", "https://pleasetaste.com"]
+  }
+  </script>
 </head>
 <body>
   <canvas id="view" aria-label="A first-person blocky world. Walk up to a building to visit the site it stands for."></canvas>
 
   <div class="hud top">
     <div class="col">
-      <span class="who">Joseph Morgan · DFW, Texas</span>
+      <span class="who"><em>Joseph Morgan</em> · DFW</span>
       <span class="sub" id="people">Just you here</span>
     </div>
     <div class="col right">
@@ -40,10 +68,10 @@
   <div class="tollbox" id="toll" hidden></div>
 
   <div class="hotbar" id="hotbar" hidden></div>
-  <canvas class="minimap" id="minimap" width="192" height="192" hidden></canvas>
+  <canvas class="minimap" id="minimap" width="192" height="192" hidden aria-label="Map of the town"></canvas>
 
   <div class="hud bottom">
-    <nav class="links">
+    <nav class="links" aria-label="Elsewhere">
       <a href="https://jmorg.org" target="_blank" rel="noopener">JLM Brands</a>
       <a href="https://themorganbrief.com" target="_blank" rel="noopener">The Morgan Brief</a>
       <a href="mailto:mail@jmorg.org">Contact</a>
@@ -60,7 +88,7 @@
     <form id="bookform">
       <h2>Guestbook</h2>
       <p>One line. It goes on the Diner wall for everyone who comes after you.</p>
-      <input type="text" id="booktext" maxlength="90" autocomplete="off" placeholder="say something">
+      <input type="text" id="booktext" maxlength="90" autocomplete="off" placeholder="say something" aria-label="Guestbook line">
       <div class="row">
         <button type="submit" class="start small">Leave it</button>
         <button type="button" class="ctl" id="bookclose">Never mind</button>
@@ -77,25 +105,30 @@
   </div>
 
   <div class="overlay" id="overlay">
-    <div class="card">
+    <div class="card" role="main">
+      <p class="eyebrow">Haslet, Texas</p>
       <h1>joe.ag</h1>
       <p>A small town in Texas. Every building is something I built. Walk up to a door to go in. Other people here are real.</p>
-      <dl class="keys">
-        <dt>W A S D</dt><dd>walk</dd>
-        <dt>Mouse</dt><dd>look</dd>
-        <dt>Space</dt><dd>jump, swim up</dd>
-        <dt>E</dt><dd>visit, ride, pet</dd>
-        <dt>F</dt><dd>fireworks</dd>
-        <dt>B</dt><dd>build, then click to place and right-click to break</dd>
-        <dt>M · P</dt><dd>map · photo</dd>
-        <dt>T · R</dt><dd>skip an hour · change the weather</dd>
-        <dt>N</dt><dd>sound</dd>
-        <dt>Esc</dt><dd>let go of the mouse (buttons and links work while it is released)</dd>
-      </dl>
+      <details class="howto">
+        <summary>How to walk around</summary>
+        <dl class="keys">
+          <dt>W A S D</dt><dd>walk</dd>
+          <dt>Mouse</dt><dd>look</dd>
+          <dt>Space</dt><dd>jump, swim up</dd>
+          <dt>E</dt><dd>visit, ride, pet</dd>
+          <dt>F</dt><dd>fireworks</dd>
+          <dt>B</dt><dd>build, then click to place and right-click to break</dd>
+          <dt>M · P</dt><dd>map · photo</dd>
+          <dt>T · R</dt><dd>skip an hour · change the weather</dd>
+          <dt>N</dt><dd>sound</dd>
+          <dt>Esc</dt><dd>let go of the mouse (buttons and links work while it is released)</dd>
+        </dl>
+        <p class="touchhelp">Left stick walks. Drag anywhere to look. The buttons do the rest.</p>
+      </details>
       <label class="namefield">Your name, if you want one on your head
         <input type="text" id="name" maxlength="24" autocomplete="off" placeholder="a visitor from Roanoke">
       </label>
-      <button type="button" class="start" id="start" disabled>Building the town</button>
+      <button type="button" class="start" id="start" disabled>Preparing the town</button>
       <div class="bar" aria-hidden="true"><i id="bar"></i></div>
       <p class="fine" id="fine">Loading the world.</p>
     </div>

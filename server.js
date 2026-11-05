@@ -141,9 +141,20 @@ function readBody(req, limit, cb) {
 /* ---------- the Brief ---------- */
 
 let brief = { title: '', link: 'https://themorganbrief.com', summary: '', date: '', at: 0 };
+function decodeEntities(s) {
+  return String(s || '')
+    .replace(/&#(\d+);/g, function (_, n) {
+      var c = Number(n);
+      return (c > 0 && c < 0x110000) ? String.fromCodePoint(c) : '';
+    })
+    .replace(/&#x([0-9a-f]+);/gi, function (_, h) {
+      var c = parseInt(h, 16);
+      return (c > 0 && c < 0x110000) ? String.fromCodePoint(c) : '';
+    })
+    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'");
+}
 function stripHtml(h) {
-  return String(h || '').replace(/<!\[CDATA\[|\]\]>/g, '').replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+  return decodeEntities(String(h || '').replace(/<!\[CDATA\[|\]\]>/g, '').replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, ' '))
     .replace(/\s+/g, ' ').trim();
 }
 function fetchBrief(cb) {

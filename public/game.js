@@ -20,11 +20,11 @@
 
   /* ---------- renderer, scene, world ---------- */
 
-  var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: false });
+  var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: !isTouch, powerPreference: 'high-performance', preserveDrawingBuffer: false });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isTouch ? 1.5 : 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   var scene = new THREE.Scene();
-  var camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1200);
+  var camera = new THREE.PerspectiveCamera(68, 1, 0.1, 1200);
   scene.add(camera);
 
   scene.add(W.group);
@@ -32,7 +32,7 @@
   W.build(function (k) { bar.style.width = Math.round(k * 100) + '%'; }).then(function () {
     ready = true;
     startBtn.disabled = false;
-    startBtn.textContent = isTouch ? 'Tap to walk' : 'Click to walk';
+    startBtn.textContent = 'Walk in';
     bar.parentElement.style.visibility = 'hidden';
     mapBase = null;
   });
@@ -55,29 +55,75 @@
   /* ---------- signs ---------- */
 
   var signs = {};
+  var signMeshes = [];
+  function isUrlLine(s) { return /^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/i.test(String(s || '').trim()); }
+  function hostOf(href) {
+    try { return new URL(href).host.replace(/^www\./, ''); } catch (e) { return ''; }
+  }
+  function plaqueLines(p) {
+    var lines = (p.lines && p.lines.length) ? p.lines.slice() : (p.sub ? [p.sub] : []);
+    return lines.filter(function (l) { return l && !isUrlLine(l); });
+  }
+  function promptSub(p) {
+    var human = '';
+    if (p.sub && !isUrlLine(p.sub)) human = p.sub;
+    else if (p.lines && p.lines.length && !isUrlLine(p.lines[0])) human = p.lines[0];
+    var host = p.href ? hostOf(p.href) : '';
+    if (human && host) return human + '  ·  ' + host;
+    return host || human || '';
+  }
+  function fitFont(x, text, max, size, family, weight) {
+    var s = size;
+    do {
+      x.font = weight + ' ' + s + 'px ' + family;
+      if (x.measureText(text).width <= max || s <= 18) return s;
+      s -= 2;
+    } while (s > 16);
+    return s;
+  }
+  function wrapText(x, text, max) {
+    var words = String(text || '').split(/\s+/), lines = [], cur = '';
+    words.forEach(function (w) {
+      if (!w) return;
+      var test = cur ? cur + ' ' + w : w;
+      if (x.measureText(test).width > max && cur) { lines.push(cur); cur = w; } else cur = test;
+    });
+    if (cur) lines.push(cur);
+    return lines;
+  }
   function drawSign(c, p) {
     var x = c.getContext('2d');
+    var serif = '"Playfair Display", Georgia, serif';
+    var sans = 'Inter, sans-serif';
+    var max = c.width - 56;
     x.clearRect(0, 0, c.width, c.height);
-    x.fillStyle = 'rgba(20,20,20,0.8)'; x.fillRect(0, 0, c.width, c.height);
-    x.strokeStyle = '#f3f0e6'; x.lineWidth = 6; x.strokeRect(3, 3, c.width - 6, c.height - 6);
-    x.textAlign = 'center'; x.fillStyle = '#f3f0e6';
-    var lines = p.lines || [p.sub];
-    var title = p.text || p.title;
-    x.font = 'bold ' + (lines.length > 1 ? 44 : 54) + 'px "Courier New", monospace';
-    x.fillText(title, c.width / 2, lines.length > 1 ? 56 : 68);
-    x.fillStyle = p.kind === 'soon' ? '#8fe0a0' : (p.kind === 'lore' ? '#d8d2b8' : '#9cc8ff');
-    x.font = (lines.length > 1 ? 28 : 38) + 'px "Courier New", monospace';
-    lines.forEach(function (l, i) { x.fillText(l, c.width / 2, (lines.length > 1 ? 96 : 122) + i * 34); });
+    x.fillStyle = '#F6F3EC'; x.fillRect(0, 0, c.width, c.height);
+    x.fillStyle = '#C56A3A'; x.fillRect(0, 0, c.width, 8);
+    x.strokeStyle = '#1C1917'; x.lineWidth = 3; x.strokeRect(1.5, 1.5, c.width - 3, c.height - 3);
+    x.font = '400 24px ' + sans;
+    var lines = [];
+    plaqueLines(p).forEach(function (l) { wrapText(x, l, max).forEach(function (w) { lines.push(w); }); });
+    lines = lines.slice(0, 2);
+    var title = p.text || p.title || '';
+    x.textAlign = 'center'; x.textBaseline = 'alphabetic'; x.fillStyle = '#1C1917';
+    fitFont(x, title, max, lines.length > 1 ? 46 : 54, serif, '500');
+    x.fillText(title, c.width / 2, lines.length ? 96 : 124, max);
+    x.fillStyle = '#3F463C';
+    lines.forEach(function (l, i) {
+      fitFont(x, l, max, 26, sans, '400');
+      x.fillText(l, c.width / 2, 150 + i * 34, max);
+    });
   }
   function makeSign(p) {
     var c = document.createElement('canvas');
-    c.width = 512; c.height = 160;
+    c.width = 640; c.height = 220;
     drawSign(c, p);
     var t = new THREE.CanvasTexture(c);
     t.colorSpace = THREE.SRGBColorSpace; t.minFilter = THREE.LinearFilter;
     var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, transparent: true, depthTest: true }));
-    var k = p.small ? 0.6 : 1;
-    s.scale.set(5.6 * k, 1.75 * k, 1);
+    var k = p.small ? 0.62 : 1;
+    var w = 5.2 * k;
+    s.scale.set(w, w * c.height / c.width, 1);
     var pos = p.sign || { x: p.x, y: p.y + 4.2, z: p.z - 0.5 };
     s.position.set(pos.x + 0.5, pos.y, pos.z + 0.5);
     s.userData = { canvas: c, texture: t, place: p };
@@ -87,26 +133,43 @@
     if (p.sign === null) return;
     var s = makeSign(p);
     scene.add(s);
+    signMeshes.push(s);
     if (p.id) signs[p.id] = s;
   });
+  function redrawSigns() {
+    signMeshes.forEach(function (s) {
+      drawSign(s.userData.canvas, s.userData.place);
+      s.userData.texture.needsUpdate = true;
+    });
+  }
   function updateSign(id, patch) {
     var s = signs[id]; if (!s) return;
     Object.assign(s.userData.place, patch);
     drawSign(s.userData.canvas, s.userData.place);
     s.userData.texture.needsUpdate = true;
   }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(redrawSigns);
 
   /* ---------- the launcher in hand ---------- */
 
   var hand = new THREE.Group();
   (function () {
-    var tube = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 0.42), blockMat('metal'));
-    var grip = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.14, 0.08), blockMat('planks'));
-    var band = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.085, 0.05), blockMat('red_awning'));
-    grip.position.set(0, -0.1, 0.1); band.position.set(0, 0, -0.12);
-    hand.add(tube); hand.add(grip); hand.add(band);
-    hand.position.set(0.34, -0.3, -0.75);
-    hand.rotation.set(0.1, -0.25, 0);
+    var clay = new THREE.MeshBasicMaterial({ color: 0xc56a3a });
+    var paper = new THREE.MeshBasicMaterial({ color: 0xf6f3ec });
+    var ink = new THREE.MeshBasicMaterial({ color: 0x1c1917 });
+    /* a cardboard tube standing up, with a rocket nose out the top */
+    var tube = new THREE.Mesh(new THREE.CylinderGeometry(0.046, 0.052, 0.2, 16), paper);
+    var band = new THREE.Mesh(new THREE.CylinderGeometry(0.058, 0.058, 0.032, 16), clay);
+    var nose = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.09, 10), clay);
+    var stick = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.11, 6), ink);
+    var spark = new THREE.Mesh(new THREE.SphereGeometry(0.016, 8, 6), clay);
+    band.position.y = -0.02;
+    nose.position.y = 0.145;
+    stick.position.set(0.055, 0.02, 0); stick.rotation.z = 0.9;
+    spark.position.set(0.1, 0.07, 0);
+    hand.add(tube); hand.add(band); hand.add(nose); hand.add(stick); hand.add(spark);
+    hand.position.set(0.46, -0.28, -0.5);
+    hand.rotation.set(-0.35, -0.2, 0.15);
     camera.add(hand);
   })();
   var heldBlock = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.22), blockMat('planks'));
@@ -158,9 +221,9 @@
     for (k in edits) { p = k.split(',').map(Number); W.setBlock(p[0], p[1], p[2], edits[k]); }
   });
   net.loadBrief(function (b) {
-    if (b && b.title) updateSign('brief', { text: 'THIS MORNING', lines: [b.title.length > 42 ? b.title.slice(0, 40) + '\u2026' : b.title], href: b.link || 'https://themorganbrief.com' });
+    if (b && b.title) updateSign('brief', { text: 'This morning', lines: [b.title], href: b.link || 'https://themorganbrief.com' });
     var place = W.places.filter(function (p) { return p.id === 'brief'; })[0];
-    if (place) { place.sub = b && b.title ? 'read this morning\'s Brief' : 'themorganbrief.com'; if (b && b.link) place.href = b.link; }
+    if (place) { place.sub = b && b.title ? 'read this morning\'s Brief' : 'every morning'; if (b && b.link) place.href = b.link; }
     newspaper(b);
   });
 
@@ -175,33 +238,59 @@
     if (cur) lines.push(cur);
     return lines;
   }
+  var paperMesh = null, paperBrief = null;
+  function paintPaper(c, b) {
+    var x = c.getContext('2d');
+    var serif = '"Playfair Display", Georgia, "Times New Roman", serif';
+    var pad = 72;
+    x.fillStyle = '#F6F3EC'; x.fillRect(0, 0, c.width, c.height);
+    x.fillStyle = '#1C1917';
+    x.fillRect(pad, 28, c.width - pad * 2, 4);
+    x.textAlign = 'center'; x.font = '500 64px ' + serif;
+    x.fillText('The Morgan Brief', c.width / 2, 108);
+    x.font = '400 22px Inter, sans-serif'; x.fillStyle = '#6B655C';
+    var dateText = 'Every morning';
+    if (b && b.date) { var d = new Date(b.date); if (!isNaN(d)) dateText = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }); }
+    x.fillText(dateText, c.width / 2, 142);
+    x.fillStyle = '#C56A3A'; x.fillRect(c.width / 2 - 28, 158, 56, 3);
+    var title = (b && b.title) || 'The stories worth knowing each morning, plus my take.';
+    var size = 46, inner = c.width - pad * 2, tl, y;
+    x.fillStyle = '#1C1917'; x.textAlign = 'center';
+    do {
+      x.font = '500 ' + size + 'px ' + serif;
+      tl = wrap(x, title, inner);
+      size -= 2;
+    } while (tl.length > 3 && size > 26);
+    tl = tl.slice(0, 3);
+    y = 214;
+    tl.forEach(function (l) { x.fillText(l, c.width / 2, y, inner); y += size + 18; });
+    x.font = '400 32px ' + serif; x.fillStyle = '#3F463C'; x.textAlign = 'left';
+    var body = (b && b.summary) || 'The stories worth knowing each morning, plus my take.';
+    var cols = 2, gap = 36, colW = (inner - gap) / cols;
+    var lines = wrap(x, body, colW), perCol = Math.max(1, Math.floor((c.height - 36 - y) / 32)), k;
+    for (k = 0; k < lines.length && k < perCol * cols; k++) x.fillText(lines[k], pad + Math.floor(k / perCol) * (colW + gap), y + 8 + (k % perCol) * 32);
+  }
   function newspaper(b) {
     var f = W.briefFront(); if (!f) return;
-    var c = document.createElement('canvas'); c.width = 1536; c.height = 512;
-    var x = c.getContext('2d');
-    x.fillStyle = '#f3efe4'; x.fillRect(0, 0, c.width, c.height);
-    x.fillStyle = '#141414';
-    x.fillRect(0, 0, c.width, 8); x.fillRect(0, c.height - 8, c.width, 8);
-    x.textAlign = 'center'; x.font = 'bold 92px Georgia, "Times New Roman", serif';
-    x.fillText('The Morgan Brief', c.width / 2, 108);
-    x.font = '26px "Courier New", monospace'; x.fillStyle = '#555';
-    var dateText = 'Every morning \u00b7 themorganbrief.com';
-    if (b && b.date) { var d = new Date(b.date); if (!isNaN(d)) dateText = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) + ' \u00b7 themorganbrief.com'; }
-    x.fillText(dateText, c.width / 2, 148);
-    x.fillRect(80, 168, c.width - 160, 3);
-    x.fillStyle = '#141414'; x.textAlign = 'left';
-    var title = (b && b.title) || 'The stories worth knowing each morning, plus my take.';
-    x.font = 'bold 56px Georgia, "Times New Roman", serif';
-    var tl = wrap(x, title, c.width - 160).slice(0, 2), y = 240;
-    tl.forEach(function (l) { x.fillText(l, 80, y); y += 62; });
-    x.font = '30px Georgia, "Times New Roman", serif'; x.fillStyle = '#333';
-    var body = (b && b.summary) || 'Healthcare and technology professional in Texas. BS in Political Science, Texas A&M. Former elected HOA president. Subscribe at the door.';
-    var cols = 2, colW = (c.width - 160 - 40) / cols, lines = wrap(x, body, colW), perCol = Math.floor((c.height - 24 - y) / 38), k;
-    for (k = 0; k < lines.length && k < perCol * cols; k++) x.fillText(lines[k], 80 + Math.floor(k / perCol) * (colW + 40), y + 10 + (k % perCol) * 38);
+    paperBrief = b || null;
+    var c = document.createElement('canvas'); c.width = 1536; c.height = 640;
+    paintPaper(c, b);
+    if (paperMesh) {
+      paperMesh.material.map.image = c;
+      paperMesh.material.map.needsUpdate = true;
+      paperMesh.userData.canvas = c;
+      return;
+    }
     var t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.minFilter = THREE.LinearFilter;
-    var m = new THREE.Mesh(new THREE.PlaneGeometry(f.w, f.h), new THREE.MeshLambertMaterial({ map: t }));
+    /* unlit, so the page stays paper-colored after dark */
+    var m = new THREE.Mesh(new THREE.PlaneGeometry(f.w, f.h), new THREE.MeshBasicMaterial({ map: t, fog: true }));
     m.position.set(f.x, f.y, f.z);
+    m.userData.canvas = c;
+    paperMesh = m;
     scene.add(m);
+  }
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () { if (paperMesh) newspaper(paperBrief); });
   }
   if (!/^https?:$/.test(location.protocol)) newspaper(null);
 
@@ -240,14 +329,14 @@
   function wallPage() {
     var c = document.createElement('canvas'); c.width = 1024; c.height = 768;
     var x = c.getContext('2d');
-    x.fillStyle = '#f3efe4'; x.fillRect(0, 0, c.width, c.height);
-    x.fillStyle = '#141414'; x.font = 'bold 54px Georgia, serif'; x.textAlign = 'left';
+    x.fillStyle = '#F6F3EC'; x.fillRect(0, 0, c.width, c.height);
+    x.fillStyle = '#1C1917'; x.font = '500 54px "Playfair Display", Georgia, serif'; x.textAlign = 'left';
     x.fillText('Joseph Morgan', 48, 84);
-    x.font = '26px "Courier New", monospace'; x.fillStyle = '#666'; x.fillText('the short version', 48, 122);
+    x.font = '400 22px Inter, sans-serif'; x.fillStyle = '#6B655C'; x.fillText('the short version', 48, 122);
     var y = 190, i;
     for (i = 0; i < FACTS.length; i++) {
-      x.fillStyle = '#e8784b'; x.font = 'bold 30px "Courier New", monospace'; x.fillText(FACTS[i][0], 48, y);
-      x.fillStyle = '#141414'; x.font = '27px Georgia, serif';
+      x.fillStyle = '#C56A3A'; x.font = '500 26px Inter, sans-serif'; x.fillText(FACTS[i][0], 48, y);
+      x.fillStyle = '#1C1917'; x.font = '400 26px "Playfair Display", Georgia, serif';
       wrap(x, FACTS[i][1], 700).forEach(function (l, k) { x.fillText(l, 290, y + k * 32); });
       y += 78;
     }
@@ -336,12 +425,13 @@
   function noteSprite(n, side) {
     var c = document.createElement('canvas'); c.width = 512; c.height = 128;
     var x = c.getContext('2d');
-    x.fillStyle = '#f3efe4'; x.fillRect(0, 0, 512, 128);
-    x.strokeStyle = '#141414'; x.lineWidth = 4; x.strokeRect(2, 2, 508, 124);
-    x.fillStyle = '#141414'; x.textAlign = 'left'; x.font = '28px "Courier New", monospace';
+    x.fillStyle = '#F6F3EC'; x.fillRect(0, 0, 512, 128);
+    x.fillStyle = '#C56A3A'; x.fillRect(0, 0, 512, 6);
+    x.strokeStyle = '#1C1917'; x.lineWidth = 2; x.strokeRect(1, 1, 510, 126);
+    x.fillStyle = '#1C1917'; x.textAlign = 'left'; x.font = '400 26px Inter, sans-serif';
     var lines = wrap(x, n.text, 476).slice(0, 2);
-    lines.forEach(function (l, i) { x.fillText(l, 18, 44 + i * 32); });
-    x.fillStyle = '#777'; x.font = '20px "Courier New", monospace'; x.textAlign = 'right';
+    lines.forEach(function (l, i) { x.fillText(l, 18, 46 + i * 32); });
+    x.fillStyle = '#6B655C'; x.font = '400 18px Inter, sans-serif'; x.textAlign = 'right';
     x.fillText('\u2014 ' + n.name, 494, 112);
     var t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.minFilter = THREE.LinearFilter;
     var m = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.4), new THREE.MeshBasicMaterial({ map: t }));
@@ -519,7 +609,7 @@
     if (best !== near || kind !== nearKind) {
       near = best; nearKind = kind;
       if (!best) hidePrompt();
-      else if (kind === 'place') { showPrompt(best.title, best.sub, best.href ? 'E' : 'E'); if (best.narrate && window.JoeAudio) window.JoeAudio.narrate(); }
+      else if (kind === 'place') { showPrompt(best.title, promptSub(best), 'E'); if (best.narrate && window.JoeAudio) window.JoeAudio.narrate(); }
       else if (kind === 'vehicle') showPrompt(best === vehicles.truck ? 'The pickup' : 'The Santa Fe', best === vehicles.truck ? 'hop in' : 'hop on the flat car', 'E');
       else if (kind === 'cow') showPrompt('A cow', 'pet it', 'E');
       else if (kind === 'dog') showPrompt(best.name, best.name === 'Luke' ? 'black Lab, good boy' : 'toller, very good girl', 'E');
@@ -654,9 +744,10 @@
     out.width = canvas.width; out.height = canvas.height;
     var x = out.getContext('2d');
     x.drawImage(canvas, 0, 0);
-    x.font = 'bold ' + Math.round(out.width / 40) + 'px "Courier New", monospace';
-    x.fillStyle = 'rgba(0,0,0,0.5)'; x.fillText('joe.ag', out.width - out.width / 7 + 3, out.height - out.height / 24 + 3);
-    x.fillStyle = '#f3f0e6'; x.fillText('joe.ag', out.width - out.width / 7, out.height - out.height / 24);
+    x.font = 'italic 500 ' + Math.round(out.width / 28) + 'px "Playfair Display", Georgia, serif';
+    x.fillStyle = '#F6F3EC';
+    x.textAlign = 'right';
+    x.fillText('joe.ag', out.width - out.width / 28, out.height - out.height / 22);
     hud.forEach(function (el) { el.style.visibility = ''; });
     if (window.JoeAudio) window.JoeAudio.shutter();
     var name = 'joe-ag-' + new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-') + '.png';
@@ -712,7 +803,7 @@
     var o;
     for (o in people.people) { x.fillStyle = '#ffffff'; x.fillRect(people.people[o].x * k - 2, people.people[o].z * k - 2, 4, 4); }
     x.save(); x.translate(player.x * k, player.z * k); x.rotate(-player.yaw);
-    x.fillStyle = '#e8784b'; x.beginPath(); x.moveTo(0, -7); x.lineTo(5, 5); x.lineTo(-5, 5); x.closePath(); x.fill();
+    x.fillStyle = '#C56A3A'; x.beginPath(); x.moveTo(0, -7); x.lineTo(5, 5); x.lineTo(-5, 5); x.closePath(); x.fill();
     x.restore();
   }
   function setMap(on) { mapOn = on; minimap.hidden = !on; if (on) drawMap(); }
@@ -748,6 +839,9 @@
   });
   document.addEventListener('keydown', function (e) {
     if (!book.hidden) { if (e.key === 'Escape') closeBook(); return; }
+    if (!overlay.hidden) return;
+    var typing = e.target && e.target.closest && e.target.closest('input, textarea, button, a, summary, details');
+    if (typing && !locked) return;
     var active = locked || isTouch || (arrived && !locked && book.hidden);
     if (e.code === 'KeyE' || e.code === 'Enter') { if (active) act(); return; }
     if (e.code === 'KeyF') { if (active) shoot(); return; }
@@ -759,7 +853,7 @@
     if (e.code === 'KeyR') { if (active) { var cyc = ['clear', 'rain', 'storm', 'snow']; var nxt = cyc[(cyc.indexOf(window.__weather || 'clear') + 1) % cyc.length]; window.__weather = nxt; sky.force(nxt); toast('Weather: ' + nxt); } return; }
     if (/^Digit[1-8]$/.test(e.code)) { if (buildMode) setSlot(Number(e.code.slice(5)) - 1); return; }
     keys[e.code] = true;
-    if (e.code === 'Space') e.preventDefault();
+    if (e.code === 'Space' && active) e.preventDefault();
   });
   document.addEventListener('keyup', function (e) { keys[e.code] = false; });
 
@@ -877,7 +971,7 @@
     people.update(dt, player);
     var skyState = sky.update(dt, player);
     if (kick > 0) kick = Math.max(0, kick - dt * 4);
-    hand.position.z = -0.75 + kick * 0.12; hand.rotation.x = 0.1 + kick * 0.35;
+    hand.position.y = -0.28 - kick * 0.03; hand.rotation.x = -0.35 + kick * 0.12;
     W.flush();
     if (netAcc > 0.1) {
       netAcc = 0;
@@ -886,7 +980,13 @@
       if (key !== lastSent && net.isOpen()) { net.send(s); lastSent = key; }
     }
     if (Math.floor(acc * 2) !== Math.floor((acc - dt) * 2)) {
-      whereEl.textContent = district();
+      var placeName = district();
+      if (whereEl.textContent !== placeName) {
+        whereEl.textContent = placeName;
+        whereEl.classList.remove('swap');
+        void whereEl.offsetWidth;
+        whereEl.classList.add('swap');
+      }
       clockEl.textContent = clockText(skyState.hour) + (skyState.weather !== 'clear' ? ' · ' + skyState.weather : '');
       if (mapOn) drawMap();
     }
@@ -900,7 +1000,6 @@
   };
   window.__sky = sky; window.__fw = fireworks; window.__game = { placeBlock: placeBlock, breakBlock: breakBlock, setBuildMode: setBuildMode, photo: photo, setMap: setMap, act: act, player: player, vehicles: vehicles, people: people, shoot: shoot, keys: function () { return keys; } };
 
-  fine.textContent = isTouch ? 'Left stick walks. Drag to look. Buttons do the rest.' : 'Your mouse is captured until you press Esc. Right-click also fires.';
-  if (isTouch) startBtn.textContent = 'Tap to walk';
+  fine.textContent = isTouch ? 'Your name stays on this phone.' : 'Your mouse is captured until you press Esc. Right-click also fires.';
   requestAnimationFrame(loop);
 })();

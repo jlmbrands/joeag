@@ -77,6 +77,7 @@
     function lerp(a, b, t) { return a + (b - a) * t; }
     var cDay = new THREE.Color(0x7fb2e5), cDusk = new THREE.Color(0xf0905a), cNight = new THREE.Color(0x0b1020), cOver = new THREE.Color(0x8c96a4);
     var tmp = new THREE.Color();
+    var cloudWhite = new THREE.Color(0xffffff);
 
     var flashLeft = 0;
     function update(dt, playerPos) {
@@ -98,6 +99,11 @@
       if (flashLeft > 0) { tmp.lerp(new THREE.Color(0xffffff), 0.7); flashLeft -= dt; }
       scene.background.copy(tmp);
       scene.fog.color.copy(tmp);
+      /* clouds are unlit, so tint them with the sky or they stay a white sticker at night */
+      if (W.materials && W.materials.cloud) {
+        /* Color.lerp is in linear light, so a modest mix already paints a pale cloud. */
+        W.materials.cloud.color.copy(tmp).lerp(cloudWhite, 0.012 + 0.5 * daylight);
+      }
       scene.fog.near = weather.kind === 'clear' ? 70 : lerp(70, 25, weather.strength);
       scene.fog.far = weather.kind === 'clear' ? 190 : lerp(190, 90, weather.strength);
 
